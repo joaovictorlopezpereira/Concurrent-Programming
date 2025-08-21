@@ -19,6 +19,7 @@ void *thread_map(void *arguments){
     }
 
     pthread_exit(NULL);
+    return NULL;
 }
 
 // Applies a function to each element of an array (concurrently)
@@ -78,7 +79,7 @@ void print_vector(int vector[], int len){
 // Argument function applied by thread_map
 int func(int x){
     // return (x <= 2) ? x : func(x-1) + func(x-2);
-    return x + 1;
+    return x * 2;
 }
 
 // Main function
