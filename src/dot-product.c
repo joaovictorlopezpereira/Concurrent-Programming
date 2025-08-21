@@ -10,6 +10,19 @@ typedef struct{
     float init_value;
 } t_args;
 
+// Argument being passed to concurrent
+typedef struct {
+    float *seg_base1;
+    float *seg_base2;
+    float *accumulator_base;
+    float seg_len;
+} t_args2;
+
+// Add function that will be passed to fold
+float add(float a, float b){
+    return a + b;
+}
+
 // Samples a float from 0 to 1
 float rand_float(){
     return (float) rand() / (float) RAND_MAX;
@@ -51,7 +64,7 @@ float concurrent_fold(float vector[], int len, float (*func)(float, float), int 
             vector_of_args[i].seg_len += len % n_threads;
         }
         vector_of_args[i].func = func;
-        vector_of_args[i].init_value = init_value;
+        vector_of_args[i].init_value=init_value;
 
         // Creates and launches each thread
         if(pthread_create(&tids[i], NULL, thread_fold, &vector_of_args[i])){
@@ -63,17 +76,70 @@ float concurrent_fold(float vector[], int len, float (*func)(float, float), int 
     for (int i=0 ; i<n_threads; i++){
         if(pthread_join(tids[i], (void **) &returned_value)){
             printf("Error: pthread_join didn't return 0.\n\n");
-            // Obs: this ``dead-end'' does not free the allocated memory
             exit(EXIT_FAILURE);
         }
         accumulator = func(*returned_value, accumulator);
-        free(returned_value);
     }
 
     // Frees the allocated space
     free(vector_of_args);
     free(tids);
     return accumulator;
+}
+
+// Function executed by each thread invoked by concurrent_dot_product
+void *thread_dot_product(void *arguments){
+    t_args2 args = *(t_args2 *) arguments; // Type-casting void* to t_args2
+
+    // Computing each product for latter
+    for (int i=0 ; i<args.seg_len ; i++){
+        args.accumulator_base[i] = args.seg_base1[i] * args.seg_base2[i];
+    }
+
+    pthread_exit(NULL);
+    return NULL;
+}
+
+// Initializes, launches and waits for threads to compute the dot product of two given vectors
+float concurrent_dot_product(float vector1[], float vector2[], int len, int n_threads){
+    t_args2 *vector_of_args = malloc(n_threads * sizeof(t_args2)); // Thread elements
+    pthread_t *tids = malloc(n_threads * sizeof(pthread_t)); // Thread identifiers
+    float *auxiliar_vector = malloc(len * sizeof(float));
+    float result;
+
+    for (int i=0 ; i<n_threads ; i++){
+        // Initializes the threads arguments
+        vector_of_args[i].seg_base1 = vector1 + (i * len / n_threads);
+        vector_of_args[i].seg_base2 = vector2 + (i * len / n_threads);
+        vector_of_args[i].accumulator_base = auxiliar_vector + (i * len / n_threads);
+        vector_of_args[i].seg_len = len / n_threads;
+        if (i == n_threads - 1){ // Selects the last remaining elements of vector to the last thread
+            vector_of_args[i].seg_len += len % n_threads;
+        }
+
+        // Creates and launches each thread
+        if(pthread_create(&tids[i], NULL, thread_dot_product, &vector_of_args[i])){
+            printf("Error: pthread_create didn't return 0.\n\n");
+        }
+    }
+    // Waits for all threads to return
+    for (int i=0 ; i<n_threads; i++){
+        if(pthread_join(tids[i], NULL)){
+            printf("Error: pthread_join didn't return 0.\n\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    // Frees some of the allocated space
+    free(vector_of_args);
+    free(tids);
+
+    // Computes the sum of the elements on the product c such that c[i] = a[i] * b[i]
+    result = concurrent_fold(auxiliar_vector, len, add, n_threads, 0);
+
+    // Frees the remaining allocated space
+    free(auxiliar_vector);
+    return result;
 }
 
 // Initializes a given vector as an enumeration
@@ -92,21 +158,12 @@ void print_vector(float vector[], int len){
     printf("]");
 }
 
-// Add function that will be passed to fold
-float add(float a, float b){
-    return a + b;
-}
-
-// Product function that will be passed to fold
-float mul(float a, float b){
-    return a * b;
-}
-
 // Main function
 int main(int argc, char* argv[]){
     short int n_threads; // Number of threads
     int size_of_vector; // Size of vector
-    float *vector; // Vector
+    float *vector1; // Vector
+    float *vector2; // Vector
     int print; // Bool
     float result; // Result
     srand(time(0)); // Seed
@@ -146,18 +203,22 @@ int main(int argc, char* argv[]){
         print = 1;
     }
 
-    // allocates and initializes vector
-    vector = malloc(size_of_vector * sizeof(float)); // Allocates space for vector
-    init_vector(vector, size_of_vector); // Initializes vector
+    // Alocates and initializes vector
+    vector1 = malloc(size_of_vector * sizeof(float)); // Allocates space for vector1
+    vector2 = malloc(size_of_vector * sizeof(float)); // Allocates space for vector2
+    init_vector(vector1, size_of_vector); // Initializes vector1
+    init_vector(vector2, size_of_vector); // Initializes vector2
 
     // Prints original vector
     if (print){
-        printf("\n\nOriginal vector: ");
-        print_vector(vector, size_of_vector);
+        printf("\n\nOriginal vectors: ");
+        print_vector(vector1, size_of_vector);
+        printf("\n");
+        print_vector(vector2, size_of_vector);
     }
 
-    // Applies fold to the vector
-    result = concurrent_fold(vector, size_of_vector, mul, n_threads, 1);
+    // Applies dot-product to both vectors
+    result = concurrent_dot_product(vector1, vector2, size_of_vector, n_threads);
 
     // Prints the fold result
     if (print){
@@ -165,7 +226,8 @@ int main(int argc, char* argv[]){
     }
 
     // Frees the allocated space
-    free(vector);
+    free(vector1);
+    free(vector2);
 
     return 0;
 }
