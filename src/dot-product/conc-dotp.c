@@ -160,28 +160,35 @@ void print_vector(float vector[], int len){
 
 // Main function
 int main(int argc, char* argv[]){
-    short int n_threads; // Number of threads
-    int size_of_vector;  // Size of vector
-    float *vector1;      // Vector1
-    float *vector2;      // Vector2
-    int print;           // Boolean
-    float result;        // Dot-product result
-    srand(time(0));      // Seed
+    short int n_threads;  // Number of threads
+    int size_of_vector;   // Size of vector
+    float *vector1;       // Vector 1
+    float *vector2;       // Vector 2
+    float result;         // Dot-product result
+    char *filename;       // File name
+    srand(time(0));       // Seed
 
     // Verifies if the program arguments are being passed
-    if(argc < 4){
-        printf("Error: there's an argument [n_threads] or [size_of_vector] or [print?] missing.\n\n");
+    if(argc < 3){
+        printf("Error: there's an argument [n_threads] [filename] missing.\n\n");
         exit(EXIT_FAILURE);
     }
 
     // Captures program's input
     n_threads = atoi(argv[1]); // Initializes n_threads
-    size_of_vector = atoi(argv[2]); // Initializes size_of_vector
-    print = atoi(argv[3]);
+    filename = argv[2];        // Initializes filename
 
-    // Defends the code in case size_of_vector < 0
-    if(size_of_vector < 0){
-        printf("Error: the size of vector needs to be non-negative.\n\n");
+    // Opens the file for reading and writing
+    FILE *file = fopen(filename, "r+b");
+    if(file == NULL){
+        perror("Error: something happened when opening file.\n\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // Reads size_of_vector
+    if(fread(&size_of_vector, sizeof(long int), 1, file) != 1){
+        printf("Error: something happened when reading vector size from file.\n\n");
+        fclose(file);
         exit(EXIT_FAILURE);
     }
 
@@ -193,41 +200,38 @@ int main(int argc, char* argv[]){
 
     // Defends the code in case n_threads > size_of_vector
     if(size_of_vector < n_threads){
-        printf("\nNumber of threads limited to %d.", size_of_vector);
+        printf("\nWarning: Number of threads limited to %d.", size_of_vector);
         n_threads = size_of_vector;
     }
 
-    // Defendes the code in case print != 0 and print != 1
-    if(print != 0 && print != 1){
-        printf("\nprint? set to 1.");
-        print = 1;
-    }
+    vector1 = malloc(size_of_vector * sizeof(float));  // Allocates space for vector1
+    vector2 = malloc(size_of_vector * sizeof(float));  // Allocates space for vector2
 
-    // Alocates and initializes vector
-    vector1 = malloc(size_of_vector * sizeof(float)); // Allocates space for vector1
-    vector2 = malloc(size_of_vector * sizeof(float)); // Allocates space for vector2
-    init_vector(vector1, size_of_vector); // Initializes vector1
-    init_vector(vector2, size_of_vector); // Initializes vector2
-
-    // Prints original vector
-    if(print){
-        printf("\n\nOriginal vectors: ");
-        print_vector(vector1, size_of_vector);
-        printf("\n");
-        print_vector(vector2, size_of_vector);
+    // Reads vector1 and vector2 from file
+    if(fread(vector1, sizeof(float), size_of_vector, file) != size_of_vector ||
+       fread(vector2, sizeof(float), size_of_vector, file) != size_of_vector){
+        printf("Error: something happened when reading vectors from file.\n\n");
+        free(vector1);
+        free(vector2);
+        fclose(file);
+        exit(EXIT_FAILURE);
     }
 
     // Applies dot-product to both vectors
     result = concurrent_dot_product(vector1, vector2, size_of_vector, n_threads);
 
     // Prints the dot-product result
-    if(print){
-        printf("\n\nresult: %f\n\n", result);
-    }
+    printf("\n\nDot product result: %f\n\n", result);
+
+    // Writes the result back to the file (overwrite previous result)
+    fseek(file, sizeof(long int) + 2 * size_of_vector * sizeof(float), SEEK_SET);
+    fwrite(&result, sizeof(float), 1, file);
 
     // Frees the allocated space
-    free(vector1);
-    free(vector2);
+    fclose(file);   // Closes file
+    free(vector1);  // Frees the space allocated to vector1
+    free(vector2);  // Frees the space allocated to vector2
+
 
     return 0;
 }
