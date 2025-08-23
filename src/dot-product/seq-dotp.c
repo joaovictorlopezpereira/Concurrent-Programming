@@ -21,7 +21,6 @@ float dot_product(float vector1[], float vector2[], long int size_of_vector){
 
 // Main function
 int main(int argc, char* argv[]){
-    short int n_threads;      // Number of threads
     long int size_of_vector;  // Size of vectors 1 and 2
     float *vector1;           // Pointer to vector 1
     float *vector2;           // Pointer to vector 2
@@ -29,19 +28,12 @@ int main(int argc, char* argv[]){
     char *filename;           // File name
 
     // Verifies if the program arguments are being passed
-    if(argc < 3){
-        printf("Error: there's an argument [n_threads] [filename] missing.\n\n");
+    if(argc < 2){
+        printf("Error: there's an argument [filename] missing.\n\n");
         exit(EXIT_FAILURE);
     }
 
-    n_threads = atoi(argv[1]);  // Initializes n_threads
-    filename = argv[2];         // Initializes filename
-
-    // Defends the code in case n_threads <= 0
-    if(n_threads <= 0){
-        printf("Error: the number of threads needs to be positive.\n\n");
-        exit(EXIT_FAILURE);
-    }
+    filename = argv[1];  // Initializes filename
 
     // Opens the file by its name
     FILE *file = fopen(filename, "rb+");
@@ -52,12 +44,6 @@ int main(int argc, char* argv[]){
 
     // Reads size_of_vector
     fread(&size_of_vector, sizeof(long int), 1, file);
-
-    // Defends the code in case n_threads > size_of_vector
-    if(size_of_vector < n_threads){
-        printf("\nWarning: number of threads limited to %ld.", size_of_vector);
-        n_threads = (short int) size_of_vector;
-    }
 
     vector1 = malloc(size_of_vector * sizeof(float));  // Allocates space for vector1
     vector2 = malloc(size_of_vector * sizeof(float));  // Allocates space for vector2

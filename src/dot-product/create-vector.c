@@ -27,6 +27,7 @@ int main(int argc, char* argv[]){
         exit(EXIT_FAILURE);
     }
 
+    // Initializes variables
     long int size_of_vector = atol(argv[1]);                  // Initializes size_of_vector
     char *filename = argv[2];                                 // Initializes filename
     float *vector1 = malloc(size_of_vector * sizeof(float));  // Allocates space for vector1
@@ -35,7 +36,7 @@ int main(int argc, char* argv[]){
     init_vector(vector2, size_of_vector);                     // Initializes vector2
     srand(time(0));                                           // Seed
 
-    // Opens the file by its name
+    // Opens the file
     FILE *file = fopen(filename, "wb");
     if(file == NULL){
         printf("Error: something happened when opening the file.\n\n");

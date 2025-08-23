@@ -50,7 +50,7 @@ void *thread_fold(void *arguments){
 }
 
 // Initializes, launches and waits for threads to apply a function on a vector
-float concurrent_fold(float vector[], int len, float (*func)(float, float), int n_threads, float init_value){
+float concurrent_fold(float vector[], long int len, float (*func)(float, float), int n_threads, float init_value){
     t_args *vector_of_args = malloc(n_threads * sizeof(t_args)); // Thread elements
     pthread_t *tids = malloc(n_threads * sizeof(pthread_t)); // Thread identifiers
     float *returned_value;
@@ -101,7 +101,7 @@ void *thread_dot_product(void *arguments){
 }
 
 // Initializes, launches and waits for threads to compute the dot product of two given vectors
-float concurrent_dot_product(float vector1[], float vector2[], int len, int n_threads){
+float concurrent_dot_product(float vector1[], float vector2[], long int len, int n_threads){
     t_args2 *vector_of_args = malloc(n_threads * sizeof(t_args2)); // Thread elements
     pthread_t *tids = malloc(n_threads * sizeof(pthread_t)); // Thread identifiers
     float *auxiliar_vector = malloc(len * sizeof(float));
@@ -143,14 +143,14 @@ float concurrent_dot_product(float vector1[], float vector2[], int len, int n_th
 }
 
 // Initializes a given vector with random values between 1 and 2
-void init_vector(float vector[], int len){
+void init_vector(float vector[], long int len){
     for(int i=0 ; i<len ; i++){
         vector[i] = sample_float(1,2);
     }
 }
 
 // Prints a vector
-void print_vector(float vector[], int len){
+void print_vector(float vector[], long int len){
     printf("[");
     for(int i=0 ; i<len ; i++){
         printf(" %f ", vector[i]);
@@ -161,7 +161,7 @@ void print_vector(float vector[], int len){
 // Main function
 int main(int argc, char* argv[]){
     short int n_threads;  // Number of threads
-    int size_of_vector;   // Size of vector
+    long int size_of_vector;   // Size of vector
     float *vector1;       // Vector 1
     float *vector2;       // Vector 2
     float result;         // Dot-product result
@@ -200,7 +200,7 @@ int main(int argc, char* argv[]){
 
     // Defends the code in case n_threads > size_of_vector
     if(size_of_vector < n_threads){
-        printf("\nWarning: Number of threads limited to %d.", size_of_vector);
+        printf("\nWarning: Number of threads limited to %ld.", size_of_vector);
         n_threads = size_of_vector;
     }
 
@@ -231,7 +231,6 @@ int main(int argc, char* argv[]){
     fclose(file);   // Closes file
     free(vector1);  // Frees the space allocated to vector1
     free(vector2);  // Frees the space allocated to vector2
-
 
     return 0;
 }
