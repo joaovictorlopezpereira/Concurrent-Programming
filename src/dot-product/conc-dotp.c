@@ -56,7 +56,7 @@ float concurrent_fold(float vector[], int len, float (*func)(float, float), int 
     float *returned_value;
     float accumulator = init_value;
 
-    for (int i=0 ; i<n_threads ; i++){
+    for(int i=0 ; i<n_threads ; i++){
         // Initializes the threads arguments
         vector_of_args[i].seg_base = vector + (i * len / n_threads);
         vector_of_args[i].seg_len = len / n_threads;
@@ -73,7 +73,7 @@ float concurrent_fold(float vector[], int len, float (*func)(float, float), int 
     }
 
     // Waits for all threads to return
-    for (int i=0 ; i<n_threads; i++){
+    for(int i=0 ; i<n_threads ; i++){
         if(pthread_join(tids[i], (void **) &returned_value)){
             printf("Error: pthread_join didn't return 0.\n\n");
             exit(EXIT_FAILURE);
@@ -92,7 +92,7 @@ void *thread_dot_product(void *arguments){
     t_args2 args = *(t_args2 *) arguments; // Type-casting void* to t_args2
 
     // Computing each product for latter
-    for (int i=0 ; i<args.seg_len ; i++){
+    for(int i=0 ; i<args.seg_len ; i++){
         args.accumulator_base[i] = args.seg_base1[i] * args.seg_base2[i];
     }
 
@@ -107,13 +107,13 @@ float concurrent_dot_product(float vector1[], float vector2[], int len, int n_th
     float *auxiliar_vector = malloc(len * sizeof(float));
     float result;
 
-    for (int i=0 ; i<n_threads ; i++){
+    for(int i=0 ; i<n_threads ; i++){
         // Initializes the threads arguments
         vector_of_args[i].seg_base1 = vector1 + (i * len / n_threads);
         vector_of_args[i].seg_base2 = vector2 + (i * len / n_threads);
         vector_of_args[i].accumulator_base = auxiliar_vector + (i * len / n_threads);
         vector_of_args[i].seg_len = len / n_threads;
-        if (i == n_threads - 1){ // Selects the last remaining elements of vector to the last thread
+        if(i == n_threads - 1){ // Selects the last remaining elements of vector to the last thread
             vector_of_args[i].seg_len += len % n_threads;
         }
 
@@ -123,7 +123,7 @@ float concurrent_dot_product(float vector1[], float vector2[], int len, int n_th
         }
     }
     // Waits for all threads to return
-    for (int i=0 ; i<n_threads; i++){
+    for(int i=0 ; i<n_threads ; i++){
         if(pthread_join(tids[i], NULL)){
             printf("Error: pthread_join didn't return 0.\n\n");
             exit(EXIT_FAILURE);
@@ -142,9 +142,9 @@ float concurrent_dot_product(float vector1[], float vector2[], int len, int n_th
     return result;
 }
 
-// Initializes a given vector as an enumeration
+// Initializes a given vector with random values between 1 and 2
 void init_vector(float vector[], int len){
-    for (int i=0 ; i<len ; i++){
+    for(int i=0 ; i<len ; i++){
         vector[i] = sample_float(1,2);
     }
 }
@@ -152,7 +152,7 @@ void init_vector(float vector[], int len){
 // Prints a vector
 void print_vector(float vector[], int len){
     printf("[");
-    for (int i=0 ; i<len ; i++){
+    for(int i=0 ; i<len ; i++){
         printf(" %f ", vector[i]);
     }
     printf("]");
@@ -161,15 +161,15 @@ void print_vector(float vector[], int len){
 // Main function
 int main(int argc, char* argv[]){
     short int n_threads; // Number of threads
-    int size_of_vector; // Size of vector
-    float *vector1; // Vector
-    float *vector2; // Vector
-    int print; // Bool
-    float result; // Result
-    srand(time(0)); // Seed
+    int size_of_vector;  // Size of vector
+    float *vector1;      // Vector1
+    float *vector2;      // Vector2
+    int print;           // Boolean
+    float result;        // Dot-product result
+    srand(time(0));      // Seed
 
     // Verifies if the program arguments are being passed
-    if (argc < 4){
+    if(argc < 4){
         printf("Error: there's an argument [n_threads] or [size_of_vector] or [print?] missing.\n\n");
         exit(EXIT_FAILURE);
     }
@@ -180,25 +180,25 @@ int main(int argc, char* argv[]){
     print = atoi(argv[3]);
 
     // Defends the code in case size_of_vector < 0
-    if (size_of_vector < 0){
+    if(size_of_vector < 0){
         printf("Error: the size of vector needs to be non-negative.\n\n");
         exit(EXIT_FAILURE);
     }
 
     // Defends the code in case n_threads <= 0
-    if (n_threads <= 0){
+    if(n_threads <= 0){
         printf("Error: the number of threads needs to be positive.\n\n");
         exit(EXIT_FAILURE);
     }
 
     // Defends the code in case n_threads > size_of_vector
-    if (size_of_vector < n_threads){
+    if(size_of_vector < n_threads){
         printf("\nNumber of threads limited to %d.", size_of_vector);
         n_threads = size_of_vector;
     }
 
     // Defendes the code in case print != 0 and print != 1
-    if (print != 0 && print != 1){
+    if(print != 0 && print != 1){
         printf("\nprint? set to 1.");
         print = 1;
     }
@@ -210,7 +210,7 @@ int main(int argc, char* argv[]){
     init_vector(vector2, size_of_vector); // Initializes vector2
 
     // Prints original vector
-    if (print){
+    if(print){
         printf("\n\nOriginal vectors: ");
         print_vector(vector1, size_of_vector);
         printf("\n");
@@ -220,8 +220,8 @@ int main(int argc, char* argv[]){
     // Applies dot-product to both vectors
     result = concurrent_dot_product(vector1, vector2, size_of_vector, n_threads);
 
-    // Prints the fold result
-    if (print){
+    // Prints the dot-product result
+    if(print){
         printf("\n\nresult: %f\n\n", result);
     }
 
