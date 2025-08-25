@@ -19,17 +19,19 @@ int main(int argc, char* argv[]) {
     size_of_vector = atol(argv[1]);
 
     // Executes the vector creator
-    snprintf(command, sizeof(command), "create-vector %ld %s", size_of_vector, filename);
+    snprintf(command, sizeof(command), "./create-vector.out %ld %s", size_of_vector, filename);
     if(system(command) != 0){
         printf("Error: something happening while executing create-vector.\n\n");
         exit(EXIT_FAILURE);
     }
+    printf("Created vector.\n");
 
     // Executes the sequential dot product
-    if(system("seq-dotp data.bin") != 0){
+    if(system("./seq-dotp.out data.bin") != 0){
         printf("Error: something happening while executing seq-dotp.\n\n");
         exit(EXIT_FAILURE);
     }
+    printf("Sequential dot-product executed.\n");
 
     // Reads sequential result (last float in the file)
     FILE *file = fopen(filename, "rb");                 // Opens file
@@ -38,10 +40,11 @@ int main(int argc, char* argv[]) {
     fclose(file);                                       // Closes file
 
     // Executes the concurrent dot product
-    if(system("conc-dotp 8 data.bin") != 0){
+    if(system("./conc-dotp.out 7 data.bin") != 0){
         printf("Error: something happening while executing conc-dotp.\n\n");
         exit(EXIT_FAILURE);
     }
+    printf("Concurrent dot-product executed.\n");
 
     // Reads concurrent result (last float in the file)
     file = fopen(filename, "rb");                       // Opens file
