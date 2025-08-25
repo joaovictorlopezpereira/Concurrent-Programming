@@ -1,6 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#ifdef __linux__
+#   define COMMAND_PREFIX "./"
+#else
+#   define COMMAND_PREFIX ""
+#endif // __linux__
+
 int main(int argc, char* argv[]) {
     char *filename = "data.bin";  // Test file name
     float sequential_result;      // Sequential dot product result
@@ -19,7 +25,7 @@ int main(int argc, char* argv[]) {
     size_of_vector = atol(argv[1]);
 
     // Executes the vector creator
-    snprintf(command, sizeof(command), "./create-vector.out %ld %s", size_of_vector, filename);
+    snprintf(command, sizeof(command), COMMAND_PREFIX "create-vector %ld %s", size_of_vector, filename);
     if(system(command) != 0){
         printf("Error: something happening while executing create-vector.\n\n");
         exit(EXIT_FAILURE);
@@ -27,7 +33,7 @@ int main(int argc, char* argv[]) {
     printf("Created vector.\n");
 
     // Executes the sequential dot product
-    if(system("./seq-dotp.out data.bin") != 0){
+    if(system(COMMAND_PREFIX "seq-dotp data.bin") != 0){
         printf("Error: something happening while executing seq-dotp.\n\n");
         exit(EXIT_FAILURE);
     }
@@ -40,7 +46,7 @@ int main(int argc, char* argv[]) {
     fclose(file);                                       // Closes file
 
     // Executes the concurrent dot product
-    if(system("./conc-dotp.out 7 data.bin") != 0){
+    if(system(COMMAND_PREFIX "conc-dotp 7 data.bin") != 0){
         printf("Error: something happening while executing conc-dotp.\n\n");
         exit(EXIT_FAILURE);
     }

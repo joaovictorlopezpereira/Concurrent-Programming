@@ -3,3 +3,7 @@
 *.exe
 *.out
 *.bin
+conc-dotp
+create-vector
+seq-dotp
+test
