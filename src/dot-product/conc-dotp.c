@@ -58,7 +58,7 @@ float concurrent_fold(float vector[], long int len, float (*func)(float, float),
 
     for(int i=0 ; i<n_threads ; i++){
         // Initializes the threads arguments
-        vector_of_args[i].seg_base = vector + (i * len / n_threads);
+        vector_of_args[i].seg_base = vector + (i * (len / n_threads));
         vector_of_args[i].seg_len = len / n_threads;
         if (i == n_threads - 1){ // Selects the last remaining elements of vector to the last thread
             vector_of_args[i].seg_len += len % n_threads;
@@ -109,9 +109,9 @@ float concurrent_dot_product(float vector1[], float vector2[], long int len, int
 
     for(int i=0 ; i<n_threads ; i++){
         // Initializes the threads arguments
-        vector_of_args[i].seg_base1 = vector1 + (i * len / n_threads);
-        vector_of_args[i].seg_base2 = vector2 + (i * len / n_threads);
-        vector_of_args[i].accumulator_base = auxiliar_vector + (i * len / n_threads);
+        vector_of_args[i].seg_base1 = vector1 + (i * (len / n_threads));
+        vector_of_args[i].seg_base2 = vector2 + (i * (len / n_threads));
+        vector_of_args[i].accumulator_base = auxiliar_vector + (i * (len / n_threads));
         vector_of_args[i].seg_len = len / n_threads;
         if(i == n_threads - 1){ // Selects the last remaining elements of vector to the last thread
             vector_of_args[i].seg_len += len % n_threads;
