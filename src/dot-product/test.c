@@ -27,15 +27,16 @@ int main(int argc, char* argv[]) {
     double concurrent_time;       // Concurrent dot product time elapsed
     struct timespec t1;           // Start time
     struct timespec t2;           // End time
+    int number_of_threads;        // Number of Threads
 
     // Verifies if the program arguments are being passed
-    if(argc < 2){
-        printf("Error: there's an argument [size_of_vector] missing.\n");
+    if(argc < 3){
+        printf("Error: there's an argument [size_of_vector] [number_of_threads] missing.\n");
         exit(EXIT_FAILURE);
     }
 
-    // Initializes size_of_vector
-    size_of_vector = atol(argv[1]);
+    size_of_vector = atol(argv[1]);     // Initializes size_of_vector
+    number_of_threads = atoi(argv[2]);  // Initializes number_of_threads
 
     // Executes the vector creator
     snprintf(command, sizeof(command), COMMAND_PREFIX "create-vector %ld %s", size_of_vector, filename);
@@ -73,7 +74,8 @@ int main(int argc, char* argv[]) {
     clock_gettime(CLOCK_MONOTONIC, &t1);
 
     // Executes the concurrent dot product
-    if(system(COMMAND_PREFIX "conc-dotp 8 data.bin") != 0){
+    snprintf(command, sizeof(command), COMMAND_PREFIX "conc-dotp %d %s", number_of_threads, filename);
+    if(system(command) != 0){
         printf("Error: something happening while executing conc-dotp.\n\n");
         exit(EXIT_FAILURE);
     }
