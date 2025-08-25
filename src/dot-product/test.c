@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 #ifdef __linux__
 #   define COMMAND_PREFIX "./"
@@ -7,6 +8,14 @@
 #   define COMMAND_PREFIX ""
 #endif // __linux__
 
+// Computes the time elapsed given a start and a end time
+double elapsed(struct timespec start, struct timespec end) {
+    return (end.tv_sec - start.tv_sec) +
+           (end.tv_nsec - start.tv_nsec) / 1e9;
+}
+
+
+// Main function
 int main(int argc, char* argv[]) {
     char *filename = "data.bin";  // Test file name
     float sequential_result;      // Sequential dot product result
@@ -14,6 +23,10 @@ int main(int argc, char* argv[]) {
     long int size_of_vector;      // Size of vector
     float relative_variance;      // Relative Variance
     char command[256];            // Command to the system
+    double sequential_time;       // Sequential dot product time elapsed
+    double concurrent_time;       // Concurrent dot product time elapsed
+    struct timespec t1;           // Start time
+    struct timespec t2;           // End time
 
     // Verifies if the program arguments are being passed
     if(argc < 2){
@@ -32,11 +45,22 @@ int main(int argc, char* argv[]) {
     }
     printf("Created vector.\n");
 
+    // Saves the current time (before sequential dot product)
+    clock_gettime(CLOCK_MONOTONIC, &t1);
+
     // Executes the sequential dot product
     if(system(COMMAND_PREFIX "seq-dotp data.bin") != 0){
         printf("Error: something happening while executing seq-dotp.\n\n");
         exit(EXIT_FAILURE);
     }
+
+    // Saves current time (after sequential dot product)
+    clock_gettime(CLOCK_MONOTONIC, &t2);
+
+    // Computes the elapsed time by sequential dot product
+    sequential_time = elapsed(t1, t2);
+
+    // Tells the user that the sequential dot product executed
     printf("Sequential dot-product executed.\n");
 
     // Reads sequential result (last float in the file)
@@ -45,12 +69,23 @@ int main(int argc, char* argv[]) {
     fread(&sequential_result, sizeof(float), 1, file);  // Reads the last float
     fclose(file);                                       // Closes file
 
+    // Saves current time (before concurrent dot product)
+    clock_gettime(CLOCK_MONOTONIC, &t1);
+
     // Executes the concurrent dot product
-    if(system(COMMAND_PREFIX "conc-dotp 7 data.bin") != 0){
+    if(system(COMMAND_PREFIX "conc-dotp 8 data.bin") != 0){
         printf("Error: something happening while executing conc-dotp.\n\n");
         exit(EXIT_FAILURE);
     }
-    printf("Concurrent dot-product executed.\n");
+
+    // Saves current time (after concurrent dot product)
+    clock_gettime(CLOCK_MONOTONIC, &t2);
+
+    // Computes the elapsed time by concurrent dot product
+    concurrent_time = elapsed(t1, t2);
+
+    // Tells the user that the concurrent dot product executed
+    printf("Concurrent dot-product executed.\n\n");
 
     // Reads concurrent result (last float in the file)
     file = fopen(filename, "rb");                       // Opens file
@@ -63,8 +98,10 @@ int main(int argc, char* argv[]) {
 
     // Prints the obtained results
     printf("Sequential result: %f\n", sequential_result);
-    printf("Concurrent result: %f\n", concurrent_result);
-    printf("Relative Variance: %f\n", relative_variance);
+    printf("Concurrent result: %f\n\n", concurrent_result);
+    printf("Relative Variance: %f\n\n", relative_variance);
+    printf("Sequential time: %g s\n", sequential_time);
+    printf("Concurrent time: %g s\n\n", concurrent_time);
 
     return 0;
 }
