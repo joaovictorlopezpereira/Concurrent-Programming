@@ -36,7 +36,7 @@ float sample_float(float a, float b){
 // Applies a function to each element of a given vector
 void *thread_fold(void *arguments){
     t_args args = *(t_args *) arguments; // Type-casting void* to t_args
-    float *accumulator = malloc(sizeof(float));
+    float *accumulator = malloc(sizeof(float)); // Obs: this malloc is being freed in concurrent_fold
     *accumulator = args.init_value;
 
     // Combining each element on the vector
@@ -79,6 +79,7 @@ float concurrent_fold(float vector[], long int len, float (*func)(float, float),
             exit(EXIT_FAILURE);
         }
         accumulator = func(*returned_value, accumulator);
+        free(returned_value); // Frees space allocated in thread_fold
     }
 
     // Frees the allocated space
@@ -103,15 +104,16 @@ void *thread_dot_product(void *arguments){
 // Initializes, launches and waits for threads to compute the dot product of two given vectors
 float concurrent_dot_product(float vector1[], float vector2[], long int len, int n_threads){
     t_args2 *vector_of_args = malloc(n_threads * sizeof(t_args2)); // Thread elements
-    pthread_t *tids = malloc(n_threads * sizeof(pthread_t)); // Thread identifiers
-    float *auxiliar_vector = malloc(len * sizeof(float));
+    pthread_t *tids = malloc(n_threads * sizeof(pthread_t));       // Thread identifiers
+    float *auxiliar_vector = malloc(len * sizeof(float));          // Auxiliar vector
     float result;
 
     for(int i=0 ; i<n_threads ; i++){
         // Initializes the threads arguments
-        vector_of_args[i].seg_base1 = vector1 + (i * (len / n_threads));
-        vector_of_args[i].seg_base2 = vector2 + (i * (len / n_threads));
-        vector_of_args[i].accumulator_base = auxiliar_vector + (i * (len / n_threads));
+        int offset = (i * (len / n_threads));
+        vector_of_args[i].seg_base1 = vector1 + offset;
+        vector_of_args[i].seg_base2 = vector2 + offset;
+        vector_of_args[i].accumulator_base = auxiliar_vector + offset;
         vector_of_args[i].seg_len = len / n_threads;
         if(i == n_threads - 1){ // Selects the last remaining elements of vector to the last thread
             vector_of_args[i].seg_len += len % n_threads;
@@ -160,13 +162,13 @@ void print_vector(float vector[], long int len){
 
 // Main function
 int main(int argc, char* argv[]){
-    short int n_threads;  // Number of threads
-    long int size_of_vector;   // Size of vector
-    float *vector1;       // Vector 1
-    float *vector2;       // Vector 2
-    float result;         // Dot-product result
-    char *filename;       // File name
-    srand(time(0));       // Seed
+    short int n_threads;      // Number of threads
+    long int size_of_vector;  // Size of vector
+    float *vector1;           // Vector 1
+    float *vector2;           // Vector 2
+    float result;             // Dot-product result
+    char *filename;           // File name
+    srand(time(0));           // Seed
 
     // Verifies if the program arguments are being passed
     if(argc < 3){
@@ -221,7 +223,7 @@ int main(int argc, char* argv[]){
     result = concurrent_dot_product(vector1, vector2, size_of_vector, n_threads);
 
     // Prints the dot-product result
-    printf("\n\nDot product result: %f\n\n", result);
+    // printf("\n\nDot product result: %f\n\n", result);
 
     // Writes the result back to the file (overwrite previous result)
     fseek(file, sizeof(long int) + 2 * size_of_vector * sizeof(float), SEEK_SET);

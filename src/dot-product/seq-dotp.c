@@ -56,7 +56,7 @@ int main(int argc, char* argv[]){
     result = dot_product(vector1, vector2, size_of_vector);
 
     // Prints the dot_product result
-    printf("\n\nDot product result: %f\n\n", result);
+    // printf("\n\nDot product result: %f\n\n", result);
 
     // Writes the dot-product result at the end of the file
     fseek(file, 0, SEEK_END);
