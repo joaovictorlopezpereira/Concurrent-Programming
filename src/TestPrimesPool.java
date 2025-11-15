@@ -91,7 +91,7 @@ class Primo implements Runnable {
   }
 }
 
-// Class MyPool (main)
+// Class TestPrimesPool (main)
 class MyPool {
   private static final int NTHREADS = 10;
 
