@@ -1,8 +1,4 @@
-/* Disciplina: Programacao Concorrente */
-/* Prof.: Silvana Rossetto */
-/* Laboratório: 11 */
-/* Codigo: Criando um pool de threads em Java */
-
+// Header
 import java.util.LinkedList;
 
 // Class Fila Tarefas
